@@ -1,0 +1,23 @@
+# Local development profile — matches docker/docker-compose.yml service names/ports.
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:interviewiq}
+    username: ${DB_USERNAME:interviewiq}
+    password: ${DB_PASSWORD:interviewiq}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    root: INFO
+    com.interviewiq: DEBUG
+    org.hibernate.SQL: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always

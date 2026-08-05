@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(java -version)",
+      "Bash(mvn -version)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://start.spring.io)",
+      "Bash(curl -s https://start.spring.io/starter.zip -d type=maven-project -d language=java -d bootVersion=3.3.5 -d baseDir=backend -d groupId=com.interviewiq -d artifactId=interviewiq-api -d name=InterviewIQAI -d description=InterviewIQ+AI+backend+-+AI-powered+technical+interview+platform -d packageName=com.interviewiq -d packaging=jar -d javaVersion=21 -d dependencies=web,security,oauth2-client,data-jpa,postgresql,validation,websocket,data-redis,actuator,devtools,lombok,mail -o interviewiq-backend.zip)",
+      "Bash(curl -s https://start.spring.io/metadata/client)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d['bootVersion'],indent=2\\)\\)\")",
+      "Bash(curl -s \"https://start.spring.io/metadata/client\")",
+      "Bash(rm -f interviewiq-backend.zip)",
+      "Bash(curl -s https://start.spring.io/starter.zip -d type=maven-project -d language=java -d bootVersion=4.1.0.RELEASE -d baseDir=backend -d groupId=com.interviewiq -d artifactId=interviewiq-api -d name=InterviewIQAI -d description=InterviewIQ+AI+backend+-+AI-powered+technical+interview+platform -d packageName=com.interviewiq -d packaging=jar -d javaVersion=21 -d dependencies=web,security,oauth2-client,data-jpa,postgresql,validation,websocket,data-redis,actuator,devtools,lombok,mail -o interviewiq-backend.zip)",
+      "Bash(unzip -q interviewiq-backend.zip -d .)",
+      "Bash(rm interviewiq-backend.zip)",
+      "Bash(rm -rf backend)",
+      "Bash(curl -s https://start.spring.io/starter.zip -d type=maven-project -d language=java -d bootVersion=4.1.0.RELEASE -d baseDir=backend -d groupId=com.interviewiq -d artifactId=interviewiq-api -d name=InterviewIQAI -d description=InterviewIQ+AI+backend+-+AI-powered+technical+interview+platform -d packageName=com.interviewiq -d packaging=jar -d javaVersion=21 -d dependencies=web,security,oauth2-client,data-jpa,postgresql,validation,websocket,data-redis,actuator,devtools,lombok,mail,flyway,testcontainers,configuration-processor -o interviewiq-backend.zip)",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.springdoc+AND+a:springdoc-openapi-starter-webmvc-ui&core=gav&rows=5&wt=json\")",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.mapstruct+AND+a:mapstruct&core=gav&rows=5&wt=json\")",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:io.jsonwebtoken+AND+a:jjwt-api&core=gav&rows=5&wt=json\")",
+      "WebFetch(domain:springdoc.org)",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.springdoc+AND+a:springdoc-openapi-starter-webmvc-ui+AND+v:3.1.0&core=gav&rows=5&wt=json\")",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.springdoc+AND+a:springdoc-openapi-starter-webmvc-ui&core=gav&rows=20&wt=json\")",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:io.jsonwebtoken+AND+a:jjwt-api+AND+v:0.12.6&core=gav&rows=1&wt=json\")",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.mapstruct+AND+a:mapstruct+AND+v:1.6.3&core=gav&rows=1&wt=json\")",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.mapstruct+AND+a:mapstruct-processor+AND+v:1.6.3&core=gav&rows=1&wt=json\")",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.projectlombok+AND+a:lombok-mapstruct-binding&core=gav&rows=5&wt=json\")",
+      "Bash(chmod +x mvnw)",
+      "Bash(./mvnw -q -o compile)",
+      "Bash(./mvnw -q compile)",
+      "Bash(curl -s \"https://search.maven.org/solrsearch/select?q=g:org.springframework.boot+AND+a:spring-boot-starter-parent&core=gav&rows=10&wt=json\")",
+      "Bash(curl -s \"https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-starter-parent/maven-metadata.xml\")",
+      "Bash(./mvnw compile *)",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(./mvnw -q dependency:resolve)",
+      "Bash(./mvnw -q test-compile)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(./mvnw clean *)",
+      "Bash(\"/c/Program Files/Java/jdk-26/bin/javap.exe\" -p -cp \"/c/Users/DELL/.m2/repository/org/springframework/spring-web/7.0.8/spring-web-7.0.8.jar\" org.springframework.http.HttpStatus)",
+      "Bash(docker version *)",
+      "Bash(npm -v)"
+    ]
+  }
+}

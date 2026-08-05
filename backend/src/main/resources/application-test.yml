@@ -1,0 +1,11 @@
+# Test profile — datasource/redis connection details are injected automatically by
+# Testcontainers @ServiceConnection (see src/test/java/.../TestcontainersConfiguration.java).
+# Nothing to configure here beyond behavior overrides.
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.interviewiq: INFO
