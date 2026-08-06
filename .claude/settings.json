@@ -37,7 +37,25 @@
       "Bash(./mvnw clean *)",
       "Bash(\"/c/Program Files/Java/jdk-26/bin/javap.exe\" -p -cp \"/c/Users/DELL/.m2/repository/org/springframework/spring-web/7.0.8/spring-web-7.0.8.jar\" org.springframework.http.HttpStatus)",
       "Bash(docker version *)",
-      "Bash(npm -v)"
-    ]
+      "Bash(npm -v)",
+      "PowerShell(Get-Command node -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command npm -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{N='UsedGB';E={[math]::Round\\($_.Used/1GB,2\\)}}, @{N='FreeGB';E={[math]::Round\\($_.Free/1GB,2\\)}})",
+      "PowerShell(npm config get cache)",
+      "PowerShell($env:TEMP)",
+      "PowerShell($env:TMP)",
+      "PowerShell(Get-PSDrive C | Select-Object @{N='FreeGB';E={[math]::Round\\($_.Free/1GB,2\\)}})",
+      "PowerShell(subst S: \"D:\\\\Smart Interview Simulator\")",
+      "Bash(rm -rf \"/d/shadcn-test\")",
+      "Bash(timeout 30 bash -c 'until curl -sf http://localhost:5173 >/dev/null 2>&1; do sleep 1; done')",
+      "Read(//d/temp/**)",
+      "Bash(cat \"/c/Users/DELL/.claude/projects/d--Smart-Interview-Simulator/memory/MEMORY.md\" 2>&1)",
+      "Read(//c/Users/DELL/.claude/projects/d--Smart-Interview-Simulator/memory/**)"
+    ],
+    "additionalDirectories": [
+      "D:\\",
+      "D:\\shadcn-test",
+      "D:\\temp\\pw-smoke"
+    ] 
   }
 }

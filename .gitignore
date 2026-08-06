@@ -1,0 +1,14 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.swp
+
+# Env files (per-package .env.example is committed; real .env never is)
+.env
+.env.local
+.env.*.local
