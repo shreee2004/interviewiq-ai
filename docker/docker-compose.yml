@@ -1,0 +1,78 @@
+# Local development stack — Postgres, Redis, backend, frontend.
+#
+# Run from anywhere with:
+#   docker compose -f docker/docker-compose.yml up --build
+#
+# Env vars come from docker/.env (copy docker/.env.example -> docker/.env
+# and fill in secrets first — see docs/ARCHITECTURE.md §2, §7).
+#
+# Explicit project name: Compose defaults to naming the project after the
+# folder containing this file ("docker"), which risks colliding with any
+# other project that also keeps its compose file in a folder called
+# "docker" (own volumes/containers get silently shared). Pin it.
+name: interviewiq
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-interviewiq}
+      POSTGRES_USER: ${DB_USERNAME:-interviewiq}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-interviewiq}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-interviewiq}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-interviewiq}
+      DB_USERNAME: ${DB_USERNAME:-interviewiq}
+      DB_PASSWORD: ${DB_PASSWORD:-interviewiq}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      AI_PROVIDER: ${AI_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:8081
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ../frontend
+    depends_on:
+      - backend
+    ports:
+      - "8081:80"
+
+volumes:
+  pgdata:

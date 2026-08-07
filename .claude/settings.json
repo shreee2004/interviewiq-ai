@@ -50,12 +50,29 @@
       "Bash(timeout 30 bash -c 'until curl -sf http://localhost:5173 >/dev/null 2>&1; do sleep 1; done')",
       "Read(//d/temp/**)",
       "Bash(cat \"/c/Users/DELL/.claude/projects/d--Smart-Interview-Simulator/memory/MEMORY.md\" 2>&1)",
-      "Read(//c/Users/DELL/.claude/projects/d--Smart-Interview-Simulator/memory/**)"
+      "Read(//c/Users/DELL/.claude/projects/d--Smart-Interview-Simulator/memory/**)",
+      "Bash(curl -s \"https://hub.docker.com/v2/repositories/library/eclipse-temurin/tags?page_size=100\")",
+      "Bash(curl -s \"https://hub.docker.com/v2/repositories/library/node/tags?page_size=100\")",
+      "Bash(curl -s \"https://hub.docker.com/v2/repositories/library/nginx/tags?page_size=100\")",
+      "Bash(curl -s \"https://hub.docker.com/v2/repositories/library/postgres/tags?page_size=100\")",
+      "Bash(curl -s \"https://hub.docker.com/v2/repositories/library/redis/tags?page_size=100\")",
+      "Bash(docker info *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(cp \"/d/Smart Interview Simulator/docker/.env.example\" \"/d/Smart Interview Simulator/docker/.env\")",
+      "Bash(sed -i 's/JWT_SECRET=change-me-to-a-long-random-string/JWT_SECRET=local-dev-only-secret-not-for-production-use-1234567890/' \"/d/Smart Interview Simulator/docker/.env\")",
+      "PowerShell(wsl --shutdown)",
+      "PowerShell(wsl --list --verbose 2>&1)",
+      "Bash(docker volume *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8080/swagger-ui/index.html)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8080/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8080/api/v1/interviews/roles)",
+      "Bash(curl -s http://localhost:8081/api/v1/../../actuator/health -o /dev/null -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s http://localhost:8081/)"
     ],
     "additionalDirectories": [
       "D:\\",
       "D:\\shadcn-test",
       "D:\\temp\\pw-smoke"
-    ] 
+    ]
   }
 }
