@@ -14,7 +14,8 @@ public record InterviewIqProperties(Jwt jwt, Oauth oauth, Ai ai, RateLimit rateL
             String secret,
             int accessTokenTtlMinutes,
             int refreshTokenTtlDays,
-            int rememberMeRefreshTokenTtlDays) {}
+            int rememberMeRefreshTokenTtlDays,
+            boolean refreshCookieSecure) {}
 
     public record Oauth(Google google) {
         public record Google(String clientId, String clientSecret) {}

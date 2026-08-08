@@ -1,11 +1,13 @@
 package com.interviewiq.common.exception;
 
-import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,9 +22,16 @@ import org.springframework.web.context.request.WebRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleNotFound(ResourceNotFoundException ex, WebRequest request) {
         return problemDetail(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ProblemDetail handleConflict(ConflictException ex, WebRequest request) {
+        return problemDetail(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage(), request);
     }
 
     @ExceptionHandler(BusinessRuleException.class)
@@ -38,6 +47,11 @@ public class GlobalExceptionHandler {
         return problemDetail(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", detail, request);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleUnreadable(HttpMessageNotReadableException ex, WebRequest request) {
+        return problemDetail(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST", "Request body is missing or malformed", request);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ProblemDetail handleAuthentication(AuthenticationException ex, WebRequest request) {
         return problemDetail(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Authentication required", request);
@@ -50,14 +64,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex, WebRequest request) {
+        log.error("Unhandled exception on {}", request.getDescription(false), ex);
         return problemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "An unexpected error occurred", request);
     }
 
     private ProblemDetail problemDetail(HttpStatus status, String type, String detail, WebRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
-        problemDetail.setType(java.net.URI.create("urn:interviewiq:" + type));
-        problemDetail.setProperty("traceId", UUID.randomUUID().toString());
-        problemDetail.setInstance(java.net.URI.create(request.getDescription(false).replace("uri=", "")));
-        return problemDetail;
+        return ProblemDetailFactory.create(status, type, detail, request.getDescription(false).replace("uri=", ""));
     }
 }

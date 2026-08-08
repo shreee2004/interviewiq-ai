@@ -23,6 +23,12 @@ spring:
     default-property-inclusion: non_null
     # Jackson 3 (Spring Boot 4) serializes java.time types as ISO-8601 strings
     # by default — no explicit write-dates-as-timestamps toggle needed/available.
+    deserialization:
+      # Jackson 3 flipped this feature's default to true (Jackson 2 defaulted to
+      # false) — without this, any request DTO with an optional primitive field
+      # (e.g. `boolean rememberMe`) 500s instead of defaulting when the client
+      # omits it. Restores the Jackson 2 behavior every prior Spring Boot app expects.
+      fail-on-null-for-primitives: false
 
   servlet:
     multipart:
@@ -57,6 +63,10 @@ interviewiq:
     access-token-ttl-minutes: 15
     refresh-token-ttl-days: 30
     remember-me-refresh-token-ttl-days: 90
+    # the refresh-token cookie's Secure flag — browsers drop Secure cookies over plain
+    # HTTP, so this must stay false for local/staging-without-TLS and only flip on
+    # where a real TLS-terminating deployment exists (production).
+    refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
   oauth:
     google:
       client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
