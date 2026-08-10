@@ -180,7 +180,7 @@ create table user_profiles (
     headline            varchar(255),               -- e.g. "Backend Engineer, 3 YOE"
     avatar_url           varchar(500),
     experience_level     varchar(30),                -- INTERN | JUNIOR | MID | SENIOR | STAFF
-    current_role         varchar(255),
+    current_job_title    varchar(255),               -- named to avoid the reserved keyword `current_role`
     target_job_role_id   uuid references job_roles(id),
     github_url            varchar(500),
     linkedin_url           varchar(500),

@@ -67,7 +67,9 @@
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8080/actuator/health)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8080/api/v1/interviews/roles)",
       "Bash(curl -s http://localhost:8081/api/v1/../../actuator/health -o /dev/null -w \"HTTP %{http_code}\\\\n\")",
-      "Bash(curl -s http://localhost:8081/)"
+      "Bash(curl -s http://localhost:8081/)",
+      "Bash(TEMP=D:/temp TMP=D:/temp ./mvnw -q -B compile)",
+      "Bash(curl -s http://localhost:8080/v3/api-docs)"
     ],
     "additionalDirectories": [
       "D:\\",

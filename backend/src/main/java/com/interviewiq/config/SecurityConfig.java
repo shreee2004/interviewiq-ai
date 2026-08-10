@@ -86,6 +86,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/actuator/health")
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/*/public-profile")
+                        .permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 
