@@ -84,3 +84,5 @@ interviewiq:
     ai-endpoint-requests-per-minute: 10
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  storage:
+    resume-upload-dir: ${RESUME_UPLOAD_DIR:/app/uploads/resumes}

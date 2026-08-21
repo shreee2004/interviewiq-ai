@@ -69,7 +69,16 @@
       "Bash(curl -s http://localhost:8081/api/v1/../../actuator/health -o /dev/null -w \"HTTP %{http_code}\\\\n\")",
       "Bash(curl -s http://localhost:8081/)",
       "Bash(TEMP=D:/temp TMP=D:/temp ./mvnw -q -B compile)",
-      "Bash(curl -s http://localhost:8080/v3/api-docs)"
+      "Bash(curl -s http://localhost:8080/v3/api-docs)",
+      "Bash(curl --version)",
+      "Bash(cygpath -w /tmp/r1.pdf)",
+      "Bash(curl -s -o /dev/null -w \"frontend: %{http_code}\\\\n\" http://localhost:8081/)",
+      "Bash(curl -s -i http://localhost:8080/api/v1/users/not-a-uuid/public-profile)",
+      "Read(//c/Users/DELL/.m2/repository/**)",
+      "Bash(xargs -I{} unzip -l {})",
+      "Bash(curl -s -o /dev/null -w \"backend health check: %{http_code} \\(took %{time_total}s\\)\\\\n\" --max-time 10 http://localhost:8080/actuator/health)",
+      "Bash(kill -9 2336 2327)",
+      "Bash(curl -s http://localhost:8080/actuator/health)"
     ],
     "additionalDirectories": [
       "D:\\",

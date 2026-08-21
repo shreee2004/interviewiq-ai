@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * needed (that annotation is only for non-record classes with multiple constructors).
  */
 @ConfigurationProperties(prefix = "interviewiq")
-public record InterviewIqProperties(Jwt jwt, Oauth oauth, Ai ai, RateLimit rateLimit, Cors cors) {
+public record InterviewIqProperties(Jwt jwt, Oauth oauth, Ai ai, RateLimit rateLimit, Cors cors, Storage storage) {
 
     public record Jwt(
             String secret,
@@ -30,4 +30,11 @@ public record InterviewIqProperties(Jwt jwt, Oauth oauth, Ai ai, RateLimit rateL
     public record RateLimit(int defaultRequestsPerMinute, int aiEndpointRequestsPerMinute) {}
 
     public record Cors(String allowedOrigins) {}
+
+    /**
+     * Local-disk storage for uploaded files (resumes, avatars later). A placeholder for
+     * Phase 6/7 — production swaps this for object storage (S3-compatible) without
+     * changing the {@code resume} module's public interface.
+     */
+    public record Storage(String resumeUploadDir) {}
 }

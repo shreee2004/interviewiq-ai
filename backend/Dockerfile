@@ -17,6 +17,10 @@ WORKDIR /app
 
 RUN useradd --system --no-create-home appuser
 COPY --from=build /app/app.jar app.jar
+
+# Created (and owned by appuser) before the volume mount so a first-time named-volume
+# mount at this path inherits the right ownership — see docker/docker-compose.yml.
+RUN mkdir -p /app/uploads/resumes && chown -R appuser /app/uploads
 USER appuser
 
 EXPOSE 8080

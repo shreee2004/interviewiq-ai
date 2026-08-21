@@ -12,6 +12,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 /**
  * Single point of exception -> HTTP mapping for every controller, producing the
@@ -50,6 +54,38 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleUnreadable(HttpMessageNotReadableException ex, WebRequest request) {
         return problemDetail(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST", "Request body is missing or malformed", request);
+    }
+
+    @ExceptionHandler(InvalidFileException.class)
+    public ProblemDetail handleInvalidFile(InvalidFileException ex, WebRequest request) {
+        return problemDetail(HttpStatus.BAD_REQUEST, "INVALID_FILE", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail handleTooLarge(MaxUploadSizeExceededException ex, WebRequest request) {
+        return problemDetail(HttpStatus.PAYLOAD_TOO_LARGE, "FILE_TOO_LARGE", "Uploaded file exceeds the 10MB limit", request);
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ProblemDetail handleMissingPart(MissingServletRequestPartException ex, WebRequest request) {
+        return problemDetail(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), request);
+    }
+
+    // Catches MultipartException itself (e.g. a non-multipart request to a file-upload
+    // endpoint) — MaxUploadSizeExceededException, a subclass, is handled more specifically
+    // above and takes priority for that case.
+    @ExceptionHandler(MultipartException.class)
+    public ProblemDetail handleMultipartError(MultipartException ex, WebRequest request) {
+        return problemDetail(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Expected a multipart file upload", request);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request) {
+        return problemDetail(
+                HttpStatus.BAD_REQUEST,
+                "VALIDATION_ERROR",
+                ex.getName() + " has an invalid value: " + ex.getValue(),
+                request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
