@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -86,6 +88,20 @@ public class GlobalExceptionHandler {
                 "VALIDATION_ERROR",
                 ex.getName() + " has an invalid value: " + ex.getValue(),
                 request);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ProblemDetail handleBadSortProperty(PropertyReferenceException ex, WebRequest request) {
+        return problemDetail(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), request);
+    }
+
+    // General safety net for DB-level constraint violations (e.g. a value exceeding a
+    // column's length) that slip past bean validation — should be rare once a DTO's
+    // constraints are kept in sync with its target column, but this keeps any gap a 400
+    // instead of a 500.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
+        return problemDetail(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Request violates a database constraint", request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
