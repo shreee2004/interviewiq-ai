@@ -10,6 +10,7 @@ import com.interviewiq.interview.dto.SessionDetailResponse;
 import com.interviewiq.interview.dto.SessionSummaryResponse;
 import com.interviewiq.interview.entity.InterviewSession;
 import com.interviewiq.interview.entity.SessionStatus;
+import com.interviewiq.interview.event.SessionStartedEvent;
 import com.interviewiq.interview.repository.CompanyRepository;
 import com.interviewiq.interview.repository.InterviewSessionRepository;
 import com.interviewiq.interview.repository.InterviewTurnRepository;
@@ -18,6 +19,7 @@ import com.interviewiq.resume.repository.ResumeRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,18 +39,21 @@ public class InterviewService {
     private final JobRoleRepository jobRoleRepository;
     private final CompanyRepository companyRepository;
     private final ResumeRepository resumeRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public InterviewService(
             InterviewSessionRepository sessionRepository,
             InterviewTurnRepository turnRepository,
             JobRoleRepository jobRoleRepository,
             CompanyRepository companyRepository,
-            ResumeRepository resumeRepository) {
+            ResumeRepository resumeRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.sessionRepository = sessionRepository;
         this.turnRepository = turnRepository;
         this.jobRoleRepository = jobRoleRepository;
         this.companyRepository = companyRepository;
         this.resumeRepository = resumeRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -107,6 +112,7 @@ public class InterviewService {
         }
         session.setStatus(SessionStatus.IN_PROGRESS);
         session.setStartedAt(Instant.now());
+        eventPublisher.publishEvent(new SessionStartedEvent(userId, sessionId, session.getStartedAt()));
         return SessionDetailResponse.from(session, turnRepository.findAllBySessionIdOrderBySequenceNoAsc(sessionId));
     }
 

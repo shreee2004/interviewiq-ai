@@ -13,6 +13,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -58,7 +59,9 @@ public class InterviewController {
     public PageResponse<SessionSummaryResponse> list(
             @AuthenticationPrincipal String userId,
             @RequestParam(required = false) SessionStatus status,
-            @PageableDefault(size = 20) Pageable pageable) {
+            // Without a default sort, row order across pages is undefined once a client
+            // doesn't specify one — Postgres makes no ordering guarantee without ORDER BY.
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return interviewService.listSessions(UUID.fromString(userId), status, pageable);
     }
 
