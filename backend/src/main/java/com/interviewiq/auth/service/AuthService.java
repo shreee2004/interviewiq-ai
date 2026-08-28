@@ -7,6 +7,7 @@ import com.interviewiq.auth.dto.SessionResponse;
 import com.interviewiq.auth.entity.RefreshToken;
 import com.interviewiq.auth.entity.User;
 import com.interviewiq.auth.entity.UserStatus;
+import com.interviewiq.auth.event.UserRegisteredEvent;
 import com.interviewiq.auth.repository.RefreshTokenRepository;
 import com.interviewiq.auth.repository.UserRepository;
 import com.interviewiq.auth.security.JwtService;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +35,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final OpaqueTokenGenerator opaqueTokenGenerator;
     private final InterviewIqProperties properties;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AuthService(
             UserRepository userRepository,
@@ -40,13 +43,15 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             OpaqueTokenGenerator opaqueTokenGenerator,
-            InterviewIqProperties properties) {
+            InterviewIqProperties properties,
+            ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.opaqueTokenGenerator = opaqueTokenGenerator;
         this.properties = properties;
+        this.eventPublisher = eventPublisher;
     }
 
     public AuthResult register(RegisterRequest request, String deviceLabel, String ipAddress) {
@@ -58,6 +63,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .build();
         userRepository.save(user);
+        eventPublisher.publishEvent(new UserRegisteredEvent(user.getId(), user.getEmail()));
         return issueTokens(user, deviceLabel, ipAddress, false);
     }
 

@@ -147,14 +147,28 @@ before being sent as `ANSWER` — the server never handles raw audio in v1.
 | POST | `/learning/recommendations/{id}/complete` | Mark resource as completed |
 | GET | `/learning/roadmap` | Personal improvement roadmap |
 
-## 10. Profile extras (`/profile`)
+## 10. Notifications (`/notifications`)
+
+Rows in `notifications` (docs/DATABASE.md §2.9) are created internally — other modules
+publish a domain event (e.g. `UserRegisteredEvent`), which `notification` listens for and
+turns into a row. There is no endpoint to create one directly; `type` is an open string
+tag (`WELCOME`, `SESSION_STARTED`, `RESUME_PARSED`, ...), not a fixed enum, since new
+producers are added over time without `notification` needing to change.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/notifications` | Paginated list of the caller's notifications, filterable by `?unread=true` |
+| PATCH | `/notifications/{id}/read` | Mark one notification as read |
+| PATCH | `/notifications/read-all` | Mark all of the caller's notifications as read |
+
+## 11. Profile extras (`/profile`)
 
 | Method | Path | Description |
 |---|---|---|
 | GET | `/profile/achievements` | Badges + XP level |
 | GET | `/profile/resume-history` | Past resume versions + score trend |
 
-## 11. Admin (`/admin`) — requires `ROLE_ADMIN`
+## 12. Admin (`/admin`) — requires `ROLE_ADMIN`
 
 | Method | Path | Description |
 |---|---|---|
@@ -165,7 +179,7 @@ before being sent as `ANSWER` — the server never handles raw audio in v1.
 | GET | `/admin/feature-flags` / `PATCH /admin/feature-flags/{key}` | Feature flag management |
 | GET | `/admin/logs` | System log search |
 
-## 12. AI Career tools (`/ai-tools`)
+## 13. AI Career tools (`/ai-tools`)
 
 | Method | Path | Description |
 |---|---|---|
@@ -174,7 +188,7 @@ before being sent as `ANSWER` — the server never handles raw audio in v1.
 | POST | `/ai-tools/cover-letter` | Generate cover letter for a target role/company |
 | POST | `/ai-tools/linkedin-optimizer` | Suggest LinkedIn headline/summary improvements |
 
-## 13. Swagger / OpenAPI
+## 14. Swagger / OpenAPI
 
 `springdoc-openapi` mounted at `/swagger-ui.html`, spec at
 `/v3/api-docs`. Every controller documented with `@Operation`/`@ApiResponse`
