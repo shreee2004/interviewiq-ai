@@ -35,6 +35,18 @@ spring:
       max-file-size: 10MB # resume uploads
       max-request-size: 10MB
 
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+
 server:
   port: ${SERVER_PORT:8080}
   error:
@@ -67,6 +79,14 @@ interviewiq:
     # HTTP, so this must stay false for local/staging-without-TLS and only flip on
     # where a real TLS-terminating deployment exists (production).
     refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
+  auth:
+    email-verification-token-ttl-hours: 24
+    # Cheap, self-contained abuse mitigation for /auth/resend-verification — a caller
+    # could otherwise email-bomb any known address with unlimited resends. Real rate
+    # limiting (Redis token bucket, docs/ARCHITECTURE.md §6) doesn't exist anywhere in
+    # this codebase yet; this cooldown isn't a substitute, just a proportionate stopgap.
+    email-verification-resend-cooldown-seconds: 60
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
   oauth:
     google:
       client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
@@ -86,3 +106,5 @@ interviewiq:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   storage:
     resume-upload-dir: ${RESUME_UPLOAD_DIR:/app/uploads/resumes}
+  notification:
+    mail-from: ${MAIL_FROM:no-reply@interviewiq.ai}

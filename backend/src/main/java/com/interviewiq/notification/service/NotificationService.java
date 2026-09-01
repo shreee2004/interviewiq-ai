@@ -1,14 +1,18 @@
 package com.interviewiq.notification.service;
 
+import com.interviewiq.auth.event.EmailVerificationRequestedEvent;
 import com.interviewiq.auth.event.UserRegisteredEvent;
 import com.interviewiq.common.dto.PageResponse;
 import com.interviewiq.common.exception.ResourceNotFoundException;
+import com.interviewiq.config.InterviewIqProperties;
 import com.interviewiq.notification.dto.NotificationResponse;
 import com.interviewiq.notification.entity.Notification;
 import com.interviewiq.notification.repository.NotificationRepository;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,9 +24,28 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final JavaMailSender mailSender;
+    private final InterviewIqProperties properties;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(
+            NotificationRepository notificationRepository, JavaMailSender mailSender, InterviewIqProperties properties) {
         this.notificationRepository = notificationRepository;
+        this.mailSender = mailSender;
+        this.properties = properties;
+    }
+
+    /** Same AFTER_COMMIT reasoning as {@link #onUserRegistered} — an SMTP call is external I/O that must never be able to fail registration. */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onEmailVerificationRequested(EmailVerificationRequestedEvent event) {
+        String link = properties.frontendBaseUrl() + "/verify-email?token=" + event.rawToken();
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(properties.notification().mailFrom());
+        message.setTo(event.email());
+        message.setSubject("Verify your InterviewIQ AI account");
+        message.setText("Confirm your email to activate your account:\n\n" + link
+                + "\n\nIf you didn't create this account, you can ignore this email.");
+        mailSender.send(message);
     }
 
     /**

@@ -8,7 +8,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * needed (that annotation is only for non-record classes with multiple constructors).
  */
 @ConfigurationProperties(prefix = "interviewiq")
-public record InterviewIqProperties(Jwt jwt, Oauth oauth, Ai ai, RateLimit rateLimit, Cors cors, Storage storage) {
+public record InterviewIqProperties(
+        Jwt jwt,
+        Auth auth,
+        Oauth oauth,
+        Ai ai,
+        RateLimit rateLimit,
+        Cors cors,
+        Storage storage,
+        Notification notification,
+        String frontendBaseUrl) {
 
     public record Jwt(
             String secret,
@@ -16,6 +25,8 @@ public record InterviewIqProperties(Jwt jwt, Oauth oauth, Ai ai, RateLimit rateL
             int refreshTokenTtlDays,
             int rememberMeRefreshTokenTtlDays,
             boolean refreshCookieSecure) {}
+
+    public record Auth(int emailVerificationTokenTtlHours, int emailVerificationResendCooldownSeconds) {}
 
     public record Oauth(Google google) {
         public record Google(String clientId, String clientSecret) {}
@@ -37,4 +48,6 @@ public record InterviewIqProperties(Jwt jwt, Oauth oauth, Ai ai, RateLimit rateL
      * changing the {@code resume} module's public interface.
      */
     public record Storage(String resumeUploadDir) {}
+
+    public record Notification(String mailFrom) {}
 }

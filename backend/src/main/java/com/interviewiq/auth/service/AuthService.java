@@ -4,14 +4,18 @@ import com.interviewiq.auth.dto.AuthResponse;
 import com.interviewiq.auth.dto.LoginRequest;
 import com.interviewiq.auth.dto.RegisterRequest;
 import com.interviewiq.auth.dto.SessionResponse;
+import com.interviewiq.auth.entity.EmailVerificationToken;
 import com.interviewiq.auth.entity.RefreshToken;
 import com.interviewiq.auth.entity.User;
 import com.interviewiq.auth.entity.UserStatus;
+import com.interviewiq.auth.event.EmailVerificationRequestedEvent;
 import com.interviewiq.auth.event.UserRegisteredEvent;
+import com.interviewiq.auth.repository.EmailVerificationTokenRepository;
 import com.interviewiq.auth.repository.RefreshTokenRepository;
 import com.interviewiq.auth.repository.UserRepository;
 import com.interviewiq.auth.security.JwtService;
 import com.interviewiq.auth.security.OpaqueTokenGenerator;
+import com.interviewiq.common.exception.BusinessRuleException;
 import com.interviewiq.common.exception.ConflictException;
 import com.interviewiq.config.InterviewIqProperties;
 import java.time.Duration;
@@ -31,6 +35,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final OpaqueTokenGenerator opaqueTokenGenerator;
@@ -40,6 +45,7 @@ public class AuthService {
     public AuthService(
             UserRepository userRepository,
             RefreshTokenRepository refreshTokenRepository,
+            EmailVerificationTokenRepository emailVerificationTokenRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             OpaqueTokenGenerator opaqueTokenGenerator,
@@ -47,6 +53,7 @@ public class AuthService {
             ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.emailVerificationTokenRepository = emailVerificationTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.opaqueTokenGenerator = opaqueTokenGenerator;
@@ -64,7 +71,54 @@ public class AuthService {
                 .build();
         userRepository.save(user);
         eventPublisher.publishEvent(new UserRegisteredEvent(user.getId(), user.getEmail()));
+        issueVerificationToken(user);
         return issueTokens(user, deviceLabel, ipAddress, false);
+    }
+
+    /**
+     * No-ops silently for an unknown or already-verified email — same enumeration-safety
+     * reasoning as {@link #login} — and also for one still inside its resend cooldown, so
+     * a caller spamming this endpoint can't email-bomb an arbitrary address (no real rate
+     * limiting exists anywhere in this codebase yet; see application.yml's comment on
+     * {@code email-verification-resend-cooldown-seconds}).
+     */
+    public void resendVerification(String email) {
+        userRepository.findByEmail(email)
+                .filter(user -> !user.isEmailVerified())
+                .filter(user -> !isWithinResendCooldown(user.getId()))
+                .ifPresent(this::issueVerificationToken);
+    }
+
+    private boolean isWithinResendCooldown(UUID userId) {
+        Instant cooldownEnd = Instant.now().minusSeconds(properties.auth().emailVerificationResendCooldownSeconds());
+        return emailVerificationTokenRepository
+                .findFirstByUserIdOrderByCreatedAtDesc(userId)
+                .map(token -> token.getCreatedAt().isAfter(cooldownEnd))
+                .orElse(false);
+    }
+
+    public void verifyEmail(String rawToken) {
+        EmailVerificationToken token = emailVerificationTokenRepository
+                .findByTokenHash(opaqueTokenGenerator.hash(rawToken))
+                .filter(EmailVerificationToken::isActive)
+                .orElseThrow(() -> new BusinessRuleException("Invalid or expired verification token"));
+
+        User user = userRepository.findById(token.getUserId())
+                .orElseThrow(() -> new BusinessRuleException("Invalid or expired verification token"));
+        user.setEmailVerified(true);
+
+        token.setConsumedAt(Instant.now());
+    }
+
+    private void issueVerificationToken(User user) {
+        String rawToken = opaqueTokenGenerator.generate();
+        EmailVerificationToken token = EmailVerificationToken.builder()
+                .userId(user.getId())
+                .tokenHash(opaqueTokenGenerator.hash(rawToken))
+                .expiresAt(Instant.now().plus(Duration.ofHours(properties.auth().emailVerificationTokenTtlHours())))
+                .build();
+        emailVerificationTokenRepository.save(token);
+        eventPublisher.publishEvent(new EmailVerificationRequestedEvent(user.getId(), user.getEmail(), rawToken));
     }
 
     public AuthResult login(LoginRequest request, String deviceLabel, String ipAddress) {

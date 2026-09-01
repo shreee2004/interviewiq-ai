@@ -39,6 +39,14 @@ services:
       timeout: 5s
       retries: 10
 
+  # Local-dev SMTP catcher — every email the backend sends lands here instead of a real
+  # inbox. Web UI at http://localhost:8025 to read verification/reset emails while testing.
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025" # web UI
+      - "1025:1025" # SMTP
+
   backend:
     build:
       context: ../backend
@@ -47,6 +55,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: local
       DB_HOST: postgres
@@ -56,6 +66,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-interviewiq}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      FRONTEND_BASE_URL: http://localhost:5173
       JWT_SECRET: ${JWT_SECRET}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}

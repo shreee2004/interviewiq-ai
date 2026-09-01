@@ -3,7 +3,9 @@ package com.interviewiq.auth.controller;
 import com.interviewiq.auth.dto.AuthResponse;
 import com.interviewiq.auth.dto.LoginRequest;
 import com.interviewiq.auth.dto.RegisterRequest;
+import com.interviewiq.auth.dto.ResendVerificationRequest;
 import com.interviewiq.auth.dto.SessionResponse;
+import com.interviewiq.auth.dto.VerifyEmailRequest;
 import com.interviewiq.auth.service.AuthResult;
 import com.interviewiq.auth.service.AuthService;
 import com.interviewiq.config.InterviewIqProperties;
@@ -25,8 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** See docs/API_DESIGN.md §2. Endpoints beyond the core token lifecycle (email verification,
- * password reset, Google OAuth, 2FA) land in a later Phase 2 slice. */
+/** See docs/API_DESIGN.md §2. Endpoints beyond this (password reset, Google OAuth, 2FA)
+ * land in a later Phase 2 slice. */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -81,6 +83,18 @@ public class AuthController {
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, expiredRefreshCookie().toString())
                 .build();
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        authService.verifyEmail(request.token());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
+        authService.resendVerification(request.email());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/sessions")
