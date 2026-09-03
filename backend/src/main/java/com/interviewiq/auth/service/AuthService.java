@@ -5,12 +5,15 @@ import com.interviewiq.auth.dto.LoginRequest;
 import com.interviewiq.auth.dto.RegisterRequest;
 import com.interviewiq.auth.dto.SessionResponse;
 import com.interviewiq.auth.entity.EmailVerificationToken;
+import com.interviewiq.auth.entity.PasswordResetToken;
 import com.interviewiq.auth.entity.RefreshToken;
 import com.interviewiq.auth.entity.User;
 import com.interviewiq.auth.entity.UserStatus;
 import com.interviewiq.auth.event.EmailVerificationRequestedEvent;
+import com.interviewiq.auth.event.PasswordResetRequestedEvent;
 import com.interviewiq.auth.event.UserRegisteredEvent;
 import com.interviewiq.auth.repository.EmailVerificationTokenRepository;
+import com.interviewiq.auth.repository.PasswordResetTokenRepository;
 import com.interviewiq.auth.repository.RefreshTokenRepository;
 import com.interviewiq.auth.repository.UserRepository;
 import com.interviewiq.auth.security.JwtService;
@@ -36,6 +39,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final OpaqueTokenGenerator opaqueTokenGenerator;
@@ -46,6 +50,7 @@ public class AuthService {
             UserRepository userRepository,
             RefreshTokenRepository refreshTokenRepository,
             EmailVerificationTokenRepository emailVerificationTokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             OpaqueTokenGenerator opaqueTokenGenerator,
@@ -54,6 +59,7 @@ public class AuthService {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.emailVerificationTokenRepository = emailVerificationTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.opaqueTokenGenerator = opaqueTokenGenerator;
@@ -119,6 +125,50 @@ public class AuthService {
                 .build();
         emailVerificationTokenRepository.save(token);
         eventPublisher.publishEvent(new EmailVerificationRequestedEvent(user.getId(), user.getEmail(), rawToken));
+    }
+
+    /** No-ops silently for an unknown email or one still inside its resend cooldown — same reasoning as {@link #resendVerification}. */
+    public void forgotPassword(String email) {
+        userRepository.findByEmail(email)
+                .filter(user -> !isWithinPasswordResetCooldown(user.getId()))
+                .ifPresent(user -> {
+                    String rawToken = opaqueTokenGenerator.generate();
+                    PasswordResetToken token = PasswordResetToken.builder()
+                            .userId(user.getId())
+                            .tokenHash(opaqueTokenGenerator.hash(rawToken))
+                            .expiresAt(Instant.now().plus(Duration.ofHours(properties.auth().passwordResetTokenTtlHours())))
+                            .build();
+                    passwordResetTokenRepository.save(token);
+                    eventPublisher.publishEvent(new PasswordResetRequestedEvent(user.getId(), user.getEmail(), rawToken));
+                });
+    }
+
+    private boolean isWithinPasswordResetCooldown(UUID userId) {
+        Instant cooldownEnd = Instant.now().minusSeconds(properties.auth().passwordResetResendCooldownSeconds());
+        return passwordResetTokenRepository
+                .findFirstByUserIdOrderByCreatedAtDesc(userId)
+                .map(token -> token.getCreatedAt().isAfter(cooldownEnd))
+                .orElse(false);
+    }
+
+    /**
+     * Also consumes every other outstanding reset token for the user (not just the one used)
+     * and revokes every active refresh token — a password reset should invalidate every other
+     * way of getting into the account, not just end the caller's own session.
+     */
+    public void resetPassword(String rawToken, String newPassword) {
+        PasswordResetToken token = passwordResetTokenRepository
+                .findByTokenHash(opaqueTokenGenerator.hash(rawToken))
+                .filter(PasswordResetToken::isActive)
+                .orElseThrow(() -> new BusinessRuleException("Invalid or expired reset token"));
+
+        User user = userRepository.findById(token.getUserId())
+                .orElseThrow(() -> new BusinessRuleException("Invalid or expired reset token"));
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+
+        Instant now = Instant.now();
+        passwordResetTokenRepository.consumeAllActiveForUser(user.getId(), now);
+        refreshTokenRepository.revokeAllActiveForUser(user.getId(), now);
     }
 
     public AuthResult login(LoginRequest request, String deviceLabel, String ipAddress) {

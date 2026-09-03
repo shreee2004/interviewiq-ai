@@ -86,6 +86,10 @@ interviewiq:
     # limiting (Redis token bucket, docs/ARCHITECTURE.md §6) doesn't exist anywhere in
     # this codebase yet; this cooldown isn't a substitute, just a proportionate stopgap.
     email-verification-resend-cooldown-seconds: 60
+    # Shorter than email verification's — a reset link grants account takeover, not just
+    # marks a flag, so a tighter window matters more.
+    password-reset-token-ttl-hours: 1
+    password-reset-resend-cooldown-seconds: 60
   frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
   oauth:
     google:

@@ -1,9 +1,11 @@
 package com.interviewiq.auth.controller;
 
 import com.interviewiq.auth.dto.AuthResponse;
+import com.interviewiq.auth.dto.ForgotPasswordRequest;
 import com.interviewiq.auth.dto.LoginRequest;
 import com.interviewiq.auth.dto.RegisterRequest;
 import com.interviewiq.auth.dto.ResendVerificationRequest;
+import com.interviewiq.auth.dto.ResetPasswordRequest;
 import com.interviewiq.auth.dto.SessionResponse;
 import com.interviewiq.auth.dto.VerifyEmailRequest;
 import com.interviewiq.auth.service.AuthResult;
@@ -27,8 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** See docs/API_DESIGN.md §2. Endpoints beyond this (password reset, Google OAuth, 2FA)
- * land in a later Phase 2 slice. */
+/** See docs/API_DESIGN.md §2. Endpoints beyond this (Google OAuth, 2FA) land in a later Phase 2 slice. */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -95,6 +96,22 @@ public class AuthController {
     public ResponseEntity<Void> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
         authService.resendVerification(request.email());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.email());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.token(), request.newPassword());
+        // Every session was just revoked server-side (see AuthService#resetPassword) — clear
+        // the caller's own cookie too, rather than leave a now-dead token sitting in it.
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, expiredRefreshCookie().toString())
+                .build();
     }
 
     @GetMapping("/sessions")

@@ -26,7 +26,11 @@ public record InterviewIqProperties(
             int rememberMeRefreshTokenTtlDays,
             boolean refreshCookieSecure) {}
 
-    public record Auth(int emailVerificationTokenTtlHours, int emailVerificationResendCooldownSeconds) {}
+    public record Auth(
+            int emailVerificationTokenTtlHours,
+            int emailVerificationResendCooldownSeconds,
+            int passwordResetTokenTtlHours,
+            int passwordResetResendCooldownSeconds) {}
 
     public record Oauth(Google google) {
         public record Google(String clientId, String clientSecret) {}

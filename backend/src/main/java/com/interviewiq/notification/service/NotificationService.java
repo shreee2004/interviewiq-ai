@@ -1,6 +1,7 @@
 package com.interviewiq.notification.service;
 
 import com.interviewiq.auth.event.EmailVerificationRequestedEvent;
+import com.interviewiq.auth.event.PasswordResetRequestedEvent;
 import com.interviewiq.auth.event.UserRegisteredEvent;
 import com.interviewiq.common.dto.PageResponse;
 import com.interviewiq.common.exception.ResourceNotFoundException;
@@ -39,12 +40,31 @@ public class NotificationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onEmailVerificationRequested(EmailVerificationRequestedEvent event) {
         String link = properties.frontendBaseUrl() + "/verify-email?token=" + event.rawToken();
+        sendMail(
+                event.email(),
+                "Verify your InterviewIQ AI account",
+                "Confirm your email to activate your account:\n\n" + link
+                        + "\n\nIf you didn't create this account, you can ignore this email.");
+    }
+
+    /** Same AFTER_COMMIT reasoning as {@link #onUserRegistered} — a password reset request must never be able to fail because email delivery did. */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onPasswordResetRequested(PasswordResetRequestedEvent event) {
+        String link = properties.frontendBaseUrl() + "/reset-password?token=" + event.rawToken();
+        sendMail(
+                event.email(),
+                "Reset your InterviewIQ AI password",
+                "Reset your password:\n\n" + link
+                        + "\n\nIf you didn't request this, you can ignore this email — your password won't change.");
+    }
+
+    private void sendMail(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(properties.notification().mailFrom());
-        message.setTo(event.email());
-        message.setSubject("Verify your InterviewIQ AI account");
-        message.setText("Confirm your email to activate your account:\n\n" + link
-                + "\n\nIf you didn't create this account, you can ignore this email.");
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(text);
         mailSender.send(message);
     }
 
